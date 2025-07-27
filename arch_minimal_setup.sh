@@ -107,11 +107,11 @@ pacman -Sy --noconfirm grub efibootmgr dosfstools os-prober mtools intel-ucode
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB_UEFI
 grub-mkconfig -o /boot/grub/grub.cfg
 
-IFACE=$(ip -o link show | awk -F': ' '!/lo/ {print $2; exit}')
+IFACE=\$(ip route get 8.8.8.8 | awk '{for(i=1;i<=NF;i++) if(\$i=="dev") print \$(i+1)}')
 
 cat <<EOL > /etc/systemd/network/20-wired.network
 [Match]
-Name=${IFACE}
+Name=\${IFACE}
 
 [Network]
 Address=${STATIC_IP}
