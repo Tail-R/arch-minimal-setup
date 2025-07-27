@@ -56,8 +56,8 @@ sgdisk --new=2:0:0 --typecode=2:8300 --change-name=2:"${ROOT_LABEL}" "${DISK}"
 # Wait for udev to reflect partition labels
 udevadm settle
 
-EFI_DEV="/dev/disk/by-partlabel/${EFI_LABEL}"
-ROOT_DEV="/dev/disk/by-partlabel/${ROOT_LABEL}"
+ROOT_DEV=$(lsblk -ln -o NAME,LABEL | awk "\$2==\"${ROOT_LABEL}\" {print \"/dev/\"\$1}")
+EFI_DEV=$(lsblk -ln -o NAME,LABEL | awk "\$2==\"${EFI_LABEL}\" {print \"/dev/\"\$1}")
 
 for dev in "${EFI_DEV}" "${ROOT_DEV}"; do
     if [ ! -b "${dev}" ]; then
@@ -75,9 +75,10 @@ mkfs.ext4 -F "${ROOT_DEV}"
 #
 # Mount devices
 #
-mkdir -p /mnt/boot/efi
-
+mkdir -p /mnt
 mount "${ROOT_DEV}" /mnt
+
+mkdir -p /mnt/boot/efi
 mount "${EFI_DEV}" /mnt/boot/efi
 
 #
