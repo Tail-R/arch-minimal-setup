@@ -10,6 +10,8 @@ if [ "${#}" -lt 2 ]; then
     exit 1
 fi
 
+set -euo pipefail
+
 ROOT_PASS="${1}"
 STATIC_IP="${2}"
 GATEWAY_IP="${3:-${STATIC_IP%.*}.1}"
