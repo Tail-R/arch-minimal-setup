@@ -6,7 +6,7 @@ if [ "${EUID}" -ne 0 ]; then
 fi
 
 if [ "${#}" -lt 2 ]; then
-    echo "Usage: $0 <root_password> <static_ip/CIDR> [gateway_ip]" >&2
+    echo "Usage: $0 <root_password> <static_ip/CIDR>" >&2
     exit 1
 fi
 
@@ -14,7 +14,6 @@ set -euo pipefail
 
 ROOT_PASS="${1}"
 STATIC_IP="${2}"
-GATEWAY_IP="${3:-${STATIC_IP%.*}.1}"
 
 if ! [[ "${STATIC_IP}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\/[0-9]+$ ]]; then
     echo "ERROR: Static IP must be in CIDR format, e.g. 192.168.1.100/24" >&2
@@ -116,12 +115,16 @@ cat <<EOL > /etc/systemd/network/20-wired.network
 Name=\${IFACE}
 
 [Network]
+DHCP=yes
 Address=${STATIC_IP}
-Gateway=${GATEWAY_IP}
-DNS=8.8.8.8
+
+[DHCP]
+UseDNS=true
+UseRoutes=true
 EOL
 
 systemctl enable systemd-networkd
+systemctl enable systemd-resolved
 systemctl enable sshd
 
 EOF
