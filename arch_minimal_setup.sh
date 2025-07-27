@@ -84,7 +84,6 @@ mount "${EFI_DEV}" /mnt/boot/efi
 #
 # Install Arch btw :3
 #
-rm -rf /etc/pacman.d/gnupg
 pacman-key --init
 pacman-key --populate archlinux
 
