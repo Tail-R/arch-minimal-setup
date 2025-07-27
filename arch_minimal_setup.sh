@@ -12,13 +12,12 @@ fi
 
 ROOT_PASS="${1}"
 STATIC_IP="${2}"
+GATEWAY_IP="${3:-${STATIC_IP%.*}.1}"
 
 if ! [[ "${STATIC_IP}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\/[0-9]+$ ]]; then
     echo "ERROR: Static IP must be in CIDR format, e.g. 192.168.1.100/24" >&2
     exit 1
 fi
-
-set -e
 
 #
 # Partitioning
@@ -74,14 +73,19 @@ mkfs.ext4 -F "${ROOT_DEV}"
 #
 # Mount devices
 #
-mkdir -p /mnt /mnt/boot/efi
+mkdir -p /mnt/boot/efi
+
 mount "${ROOT_DEV}" /mnt
 mount "${EFI_DEV}" /mnt/boot/efi
 
 #
 # Install Arch btw :3
 #
-pacstrap /mnt base linux linux-firmware sudo vim
+rm -rf /etc/pacman.d/gnupg
+pacman-key --init
+pacman-key --populate archlinux
+
+pacstrap /mnt base linux linux-firmware sudo openssh vim
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
@@ -95,21 +99,27 @@ sed -i 's/^#[[:space:]]*en_US.UTF-8/en_US.UTF-8/' /etc/locale.gen
 locale-gen
 echo 'LANG=en_US.UTF-8' > /etc/locale.conf
 
-pacman -Sy --noconfirm grub efibootmgr dosfstools os-prober mtools intel-ucode networkmanager wpa_supplicant iw openssh
+pacman -Sy --noconfirm archlinux-keyring
+pacman-key --init
+pacman-key --populate archlinux
+pacman -Sy --noconfirm grub efibootmgr dosfstools os-prober mtools intel-ucode
 
 grub-install --target=x86_64-efi --efi-directory=/boot/efi --bootloader-id=GRUB_UEFI
 grub-mkconfig -o /boot/grub/grub.cfg
 
-systemctl enable NetworkManager
+IFACE=$(ip -o link show | awk -F': ' '!/lo/ {print $2; exit}')
+
+cat <<EOL > /etc/systemd/network/20-wired.network
+[Match]
+Name=${IFACE}
+
+[Network]
+Address=${STATIC_IP}
+Gateway=${GATEWAY_IP}
+DNS=8.8.8.8
+EOL
+
+systemctl enable systemd-networkd
 systemctl enable sshd
 
-IFACE=\$(nmcli device | awk '/ethernet|wifi/ {print \$1; exit}')
-GATEWAY="${3:-${STATIC_IP%.*}.1}"
-
-nmcli con add type ethernet ifname "\$IFACE" con-name static-conn
-nmcli con mod static-conn ipv4.addresses "${STATIC_IP}"
-nmcli con mod static-conn ipv4.gateway "${GATEWAY}"
-nmcli con mod static-conn ipv4.dns 8.8.8.8
-nmcli con mod static-conn ipv4.method manual
-nmcli con up static-conn
 EOF
