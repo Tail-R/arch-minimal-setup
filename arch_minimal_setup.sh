@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-if [ "$EUID" -ne 0 ]; then
+if [ $EUID -ne 0 ]; then
     echo "ERROR: You are not super user" >&2
     exit 1
 fi
@@ -42,7 +42,7 @@ EFI_DEV="/dev/disk/by-partlabel/$EFI_LABEL"
 ROOT_DEV="/dev/disk/by-partlabel/$ROOT_LABEL"
 
 for dev in "$EFI_DEV" "$ROOT_DEV"; do
-    if [ ! -b "$dev" ]; then
+    if [ ! -b $dev ]; then
         echo "ERROR: $dev is not exists" >&2
         exit 1
     fi
