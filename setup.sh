@@ -1,5 +1,10 @@
 #! /usr/bin/env bash
 
+SSH_PUBKEY_URL="http://192.168.1.1:8080/ansible_ed25519.pub"
+SSH_CONF="/etc/ssh/sshd_config"
+
+ADMIN="admin"
+
 if [ "${EUID}" -ne 0 ]; then
     echo "ERROR: You are not super user" >&2
     exit 1
@@ -123,8 +128,33 @@ UseDNS=true
 UseRoutes=true
 EOL
 
+useradd -m -G wheel -s /bin/bash ${ADMIN}
+echo "${ADMIN}:${ROOT_PASS}" | chpasswd
+cp /etc/sudoers /etc/sudoers.backup &&
+sed -i 's/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers
+
+
+mkdir -p /home/${ADMIN}/.ssh
+curl -fsSL ${SSH_PUBKEY_URL} >> /home/${ADMIN}/.ssh/authorized_keys
+chown -R ${ADMIN}:${ADMIN} /home/${ADMIN}/.ssh
+chmod 700 /home/${ADMIN}/.ssh
+chmod 600 /home/${ADMIN}/.ssh/authorized_keys
+
+sed -i 's/^#\?\s*PasswordAuthentication\s\+.*/PasswordAuthentication no/' ${SSH_CONF}
+sed -i 's/^#\?\s*PermitRootLogin\s\+.*/PermitRootLogin prohibit-password/' ${SSH_CONF}
+sed -i 's/^#\?\s*PubkeyAuthentication\s\+.*/PubkeyAuthentication yes/' ${SSH_CONF}
+
+grep -q '^PasswordAuthentication' ${SSH_CONF} || echo 'PasswordAuthentication no' >> ${SSH_CONF}
+grep -q '^PermitRootLogin' ${SSH_CONF} || echo 'PermitRootLogin prohibit-password' >> ${SSH_CONF}
+grep -q '^PubkeyAuthentication' ${SSH_CONF} || echo 'PubkeyAuthentication yes' >> ${SSH_CONF}
+
 systemctl enable systemd-networkd
 systemctl enable systemd-resolved
 systemctl enable sshd
+
+if ! sshd -t; then
+    echo "sshd config error" >&2
+    exit 1
+fi
 
 EOF
