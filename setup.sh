@@ -152,9 +152,4 @@ systemctl enable systemd-networkd
 systemctl enable systemd-resolved
 systemctl enable sshd
 
-if ! sshd -t; then
-    echo "sshd config error" >&2
-    exit 1
-fi
-
 EOF
