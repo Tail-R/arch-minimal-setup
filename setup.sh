@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-SSH_PUBKEY_URL="http://192.168.100.1:8080/ansible_ed25519.pub"
+SSH_PUBKEY_URL="http://192.168.100.2:8080/ansible_ed25519.pub"
 SSH_CONF="/etc/ssh/sshd_config"
 
 ADMIN="admin"
