@@ -1,6 +1,6 @@
 #! /usr/bin/env bash
 
-SSH_PUBKEY_URL="http://192.168.100.2:8080/ansible_ed25519.pub"
+SSH_PUBKEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAq4r93ZNZfSEFIyLHHYtwXYu3vN4ZdPXH/DDdD4W1hx ansible@mycluster"
 SSH_CONF="/etc/ssh/sshd_config"
 
 ADMIN="admin"
@@ -91,7 +91,7 @@ mount "${EFI_DEV}" /mnt/boot/efi
 pacman-key --init
 pacman-key --populate archlinux
 
-pacstrap /mnt base linux linux-firmware sudo openssh vim
+pacstrap /mnt base base-devel linux linux-firmware sudo openssh vim
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
@@ -120,7 +120,7 @@ cat <<EOL > /etc/systemd/network/20-wired.network
 Name=\${IFACE}
 
 [Network]
-DHCP=yes
+DHCP=no
 Address=${STATIC_IP}
 
 [DHCP]
@@ -135,7 +135,7 @@ sed -i 's/^# \(%wheel ALL=(ALL:ALL) ALL\)/\1/' /etc/sudoers
 
 
 mkdir -p /home/${ADMIN}/.ssh
-curl -fsSL ${SSH_PUBKEY_URL} >> /home/${ADMIN}/.ssh/authorized_keys
+echo "${SSH_PUBKEY}" >> /home/${ADMIN}/.ssh/authorized_keys
 chown -R ${ADMIN}:${ADMIN} /home/${ADMIN}/.ssh
 chmod 700 /home/${ADMIN}/.ssh
 chmod 600 /home/${ADMIN}/.ssh/authorized_keys
