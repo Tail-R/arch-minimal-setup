@@ -26,6 +26,7 @@ curl -sSL https://raw.githubusercontent.com/Tail-R/arch-minimal-setup/main/setup
 chmod +x setup.sh
 
 ./setup.sh root_password static_ip/CIDR
+```
 
 ## To-Do
 
