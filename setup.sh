@@ -18,12 +18,15 @@ fi
 set -euo pipefail
 
 ROOT_PASS="${1}"
-STATIC_IP="${2}"
+ADDRESS="${2}"
 
-if ! [[ "${STATIC_IP}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\/[0-9]+$ ]]; then
+if ! [[ "${ADDRESS}" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+\/[0-9]+$ ]]; then
     echo "ERROR: Static IP must be in CIDR format, e.g. 192.168.1.100/24" >&2
     exit 1
 fi
+
+GATEWAY="$(echo "${ADDRESS}" | cut -d'/' -f1 | sed -E 's|([0-9]+\.[0-9]+\.[0-9]+)\.[0-9]+|\1.1|')"
+DNS="${GATEWAY}" # or just "8.8.8.8"
 
 #
 # Partitioning
@@ -121,11 +124,9 @@ Name=\${IFACE}
 
 [Network]
 DHCP=no
-Address=${STATIC_IP}
-
-[DHCP]
-UseDNS=true
-UseRoutes=true
+Address=${ADDRESS}
+Gateway=${GATEWAY}
+DNS=${DNS}
 EOL
 
 useradd -m -G wheel -s /bin/bash ${ADMIN}
