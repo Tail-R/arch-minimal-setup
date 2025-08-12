@@ -94,7 +94,7 @@ mount "${EFI_DEV}" /mnt/boot/efi
 pacman-key --init
 pacman-key --populate archlinux
 
-pacstrap /mnt base base-devel linux linux-firmware sudo openssh vim
+pacstrap /mnt base base-devel linux linux-firmware sudo openssh vim python3
 
 genfstab -U /mnt >> /mnt/etc/fstab
 
