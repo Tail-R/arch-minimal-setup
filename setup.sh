@@ -46,7 +46,8 @@ GATEWAY="$(echo "${ADDRESS}" | cut -d'/' -f1 | sed -E 's|([0-9]+\.[0-9]+\.[0-9]+
 DNS="${GATEWAY}" # or just "8.8.8.8"
 
 # Get the name of the first matching network interface
-IFACE=$(ip route get 8.8.8.8 | awk '{for(i=1;i<=NF;i++) if(\$i=="dev") print \$(i+1)}')
+IFACE=$(ip route get 8.8.8.8 | awk '{for(i=1;i<=NF;i++) if($i=="dev") print $(i+1)}')
+
 
 # Create .network file
 cat <<EOF > /etc/systemd/network/20-wired.network
